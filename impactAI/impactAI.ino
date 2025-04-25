@@ -1,78 +1,60 @@
 // libraries
+#include <WiFi.h>
 #include <PulseSensorPlayground.h>
+#include "secrets.h"
+
+// objects
+PulseSensorPlayground pulseSensor;
 
 // variables
-const int heartPin = 13;
-const int threshold = 550;
-const int arraySize = 5;
-int sensorReadings[arraySize];
-int readingSum = 0;
-int validReadings = 0;
+const int PULSE_INPUT = 34;
+const int THRESHOLD = 685;
 
-// timing variables
-unsigned long lastBeatTime = 0;
-unsigned long readingInterval = 2000;
-unsigned long lastLoopTime = 0;
-unsigned long loopDelay = 3000;
+// network info
+const char* ssid = SSID;
+const char* password = PASSWORD;
 
-// objescts
-PulseSensorPlayground pulseSensor;
+// wifi connection
+void beginWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Attempting to connect to ");
+  Serial.print(ssid);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(" ~");
+    delay(1000);
+  }
+  Serial.println("\nConnected");
+}
+
+// bool sendPulseSignal = true;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    ;
+  delay(1500);
+  beginWiFi();
+
+  analogReadResolution(10);
+
+  // pulsesensor manager
+  pulseSensor.analogInput(PULSE_INPUT);
+  pulseSensor.setSerial(Serial);
+  pulseSensor.setThreshold(THRESHOLD);
+
+  // start reading the pulsesensor signal
+  if (!pulseSensor.begin()) {
+    Serial.println("Error in creating the pulsesensor signal");
   }
-
-  pulseSensor.analogInput(heartPin);
-  pulseSensor.setThreshold(threshold);
-
-  if(pulseSensor.begin()) {
-    Serial.println("The PulseSensor object has been successfully created!!!");
-  } else {
-    Serial.println("Error in creating PulseSensor object");
-  }
-
-  lastLoopTime = millis();
 }
 
 void loop() {
-  readingSum = 0;
-  validReadings = 0;
+  int signal = analogRead(PULSE_INPUT);
 
-  while(validReadings < arraySize) {
-    if(pulseSensor.sawStartOfBeat()) {
-      int bpm = pulseSensor.getBeatsPerMinute();
-
-      if(bpm > 100) {
-        sensorReadings[validReadings] = bpm;
-        Serial.println("Heartbeat Recorded!!");
-        Serial.print("BPM: ");
-        Serial.println(sensorReadings[validReadings]);
-        readingSum += sensorReadings[validReadings];
-        validReadings++;
-      }
-
-      lastBeatTime = millis();
-    }
-
-    if(millis() - lastBeatTime >= readingInterval) {
-      lastBeatTime = millis();
-    }
+  if (pulseSensor.sawStartOfBeat()) {
+    int bpm = pulseSensor.getBeatsPerMinute();
+    Serial.print("BPM: ");
+    Serial.println(bpm);
   }
-/*
-  if(validReadings > 0) {
-    int averageBpm = readingSum / validReadings;
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("The average BPM is: ");
-    lcd.print(averageBpm);
-  } else {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("No valid readings");
-  }
-*/
-  lastLoopTime = millis();
-  delay(loopDelay);  
+
+  delay(1000);
 }
