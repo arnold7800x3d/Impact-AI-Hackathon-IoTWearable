@@ -3,14 +3,11 @@
 #include <HTTPClient.h>
 #include <PulseSensorPlayground.h>
 #include "secrets.h"
-//#include <LedControl.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//#define NBR_MTX 1
 #define SCREEN_WIDTH 128  // OLED display width (px)
 #define SCREEN_HEIGHT 64  // OLED display height (px)
-
 
 // objects
 PulseSensorPlayground pulseSensor;
@@ -40,8 +37,6 @@ void beginWiFi() {
   Serial.println("\nConnected");
 }
 
-// bool sendPulseSignal = true;
-
 void setup() {
   Serial.begin(115200);
   delay(1500);
@@ -52,32 +47,39 @@ void setup() {
   // pulsesensor manager
   pulseSensor.analogInput(PULSE_INPUT);
   pulseSensor.setSerial(Serial);
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ;
-  }
-  delay(2000);
-
   pulseSensor.setThreshold(THRESHOLD);
 
   // start reading the pulsesensor signal
   if (!pulseSensor.begin()) {
     Serial.println("Error in creating the pulsesensor signal");
   }
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ;
+  }
+  delay(2000);
 }
 
 void loop() {
-  // int signal = analogRead(PULSE_INPUT);
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+
+  display.setCursor(0, 0);
 
   if (pulseSensor.sawStartOfBeat()) {
     int bpm = pulseSensor.getBeatsPerMinute();
-    Serial.print("BPM: ");
-    Serial.println(bpm);
+    Serial.print("BPM: "); Serial.println(bpm);
+    display.print("BPM: "); display.println(bpm);  
     sendBPMData(bpm);
-  }
 
-  delay(1000);
+    display.display();
+    delay(2000);
+  }
+  
+  delay(10);
 }
 
 void sendBPMData(int bpm) {
@@ -92,6 +94,7 @@ void sendBPMData(int bpm) {
     if (httpResponseCode > 0) {
       Serial.print("POST sent. Response: ");
       Serial.println(httpResponseCode);
+      display.print("POST OK.Response:"); display.println(httpResponseCode);
     } else {
       Serial.print("POST failed. Error: ");
       Serial.println(http.errorToString(httpResponseCode));
