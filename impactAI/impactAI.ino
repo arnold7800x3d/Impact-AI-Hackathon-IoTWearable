@@ -3,16 +3,22 @@
 #include <HTTPClient.h>
 #include <PulseSensorPlayground.h>
 #include "secrets.h"
-#include "LedControlMS.h"
+//#include <LedControl.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-#define NBR_MTX 1
+//#define NBR_MTX 1
+#define SCREEN_WIDTH 128  // OLED display width (px)
+#define SCREEN_HEIGHT 64  // OLED display height (px)
+
 
 // objects
 PulseSensorPlayground pulseSensor;
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // variables
 const int PULSE_INPUT = 34;
-const int THRESHOLD = 685;
+const int THRESHOLD = 550;
 
 // api endpoint
 const char* server = "https://abod-llm.vercel.app/sensor";
@@ -46,6 +52,13 @@ void setup() {
   // pulsesensor manager
   pulseSensor.analogInput(PULSE_INPUT);
   pulseSensor.setSerial(Serial);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {  // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ;
+  }
+  delay(2000);
+
   pulseSensor.setThreshold(THRESHOLD);
 
   // start reading the pulsesensor signal
