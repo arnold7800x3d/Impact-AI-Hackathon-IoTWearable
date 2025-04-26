@@ -5,7 +5,7 @@
 #include "secrets.h"
 #include "LedControlMS.h"
 
-#define NBR_MTX1
+#define NBR_MTX 1
 
 // objects
 PulseSensorPlayground pulseSensor;
