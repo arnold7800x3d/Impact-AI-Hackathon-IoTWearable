@@ -1,4 +1,4 @@
-// this file contains senstive information re;ated to the network
+// this file contains senstive information related to the network
 
-#define SSID "LP-GUEST"
-#define PASSWORD "Upwards@29"
+#define SSID ""
+#define PASSWORD ""
